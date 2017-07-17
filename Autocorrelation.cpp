@@ -173,8 +173,8 @@ Autocorrelation::getOutputDescriptors() const
     // Every plugin must have at least one output.
 
     OutputDescriptor d;
-    d.identifier = "output";
-    d.name = "My Output";
+    d.identifier = "ff";
+    d.name = "Fundamental frequency";
     d.description = "";
     d.unit = "";
     d.hasFixedBinCount = true;
