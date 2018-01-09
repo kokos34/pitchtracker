@@ -19,7 +19,7 @@ CFLAGS		:= -Wall -Wextra -g -fPIC
 
 # Location of Vamp plugin SDK relative to the project directory
 
-VAMPSDK_DIR	:= /home/kokos/Downloads/vamp-plugin-sdk-2.7.1
+VAMPSDK_DIR	:= /home/kokos/Pobrane/vamp-plugin-sdk-2.7.1
 
 
 # Libraries and linker flags required by plugin: add any -l<library>

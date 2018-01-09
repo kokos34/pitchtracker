@@ -10,7 +10,8 @@
 
 # For a debug build...
 
-CFLAGS		:= -Wall -Wextra -g -fPIC
+CFLAGS		:= -g -fPIC
+#-Wall -Wextra 
 
 # ... or for a release build
 

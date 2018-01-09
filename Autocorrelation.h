@@ -5,13 +5,16 @@
 
 
 // Remember to use a different guard symbol in each header!
+
 #ifndef MY_PLUGIN_H
 #define MY_PLUGIN_H
 
 #include <vamp-sdk/Plugin.h>
+#include <vector>
+#include <memory>
+#include <iostream>
 
 using std::string;
-
 
 class Autocorrelation : public Vamp::Plugin
 {
@@ -53,8 +56,11 @@ public:
 protected:
     // plugin-specific data and methods go here
 	size_t m_blockSize;
+    float m_inputSampleRate;
+    float findSetAutocorrelationFunction(std::vector<float> samples, int m);
+    int findFirstMinimumInAC(std::vector<float> autocorrelationFunction);
+
 };
 
-
-
 #endif
+

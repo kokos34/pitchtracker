@@ -6,13 +6,15 @@
 
 #include "Autocorrelation.h"
 
-
 Autocorrelation::Autocorrelation(float inputSampleRate) :
-    Plugin(inputSampleRate)
+    Plugin(inputSampleRate),
+    m_blockSize(0),
+    m_inputSampleRate(44100.0)
     // Also be sure to set your plugin parameters (presumably stored
     // in member variables) to their default values here -- the host
     // will not do that for you
 {
+
 }
 
 Autocorrelation::~Autocorrelation()
@@ -208,8 +210,66 @@ Autocorrelation::reset()
 Autocorrelation::FeatureSet
 Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 {
-    // Do actual work!
-    return FeatureSet();
+    float block_fundFreq = 0.0f;
+    std::allocator<float> alloc0;
+    std::vector<float> input(alloc0);
+    input.resize(m_blockSize);
+
+    // Cast to vector
+    for(size_t i = 0; i < m_blockSize; i++)
+        input.push_back(inputBuffers[0][i]);
+
+    // Find AC function
+    std::allocator<float> alloc1;
+    std::vector<float> autocorrelationFunction(alloc1);
+    autocorrelationFunction.resize(m_blockSize);
+    for(size_t m = 0; m < m_blockSize; m++)
+        autocorrelationFunction.push_back(findSetAutocorrelationFunction(input, m));
+
+    // Find it's minumum
+    int minimum = findFirstMinimumInAC(autocorrelationFunction);
+
+    // Calculate fundamental frequency
+    block_fundFreq = 1.0 / minimum * m_inputSampleRate;
+
+    Feature f;
+    f.hasTimestamp = false;
+    f.values.push_back(block_fundFreq);
+
+    FeatureSet fs;
+    fs[0].push_back(f);
+
+    return fs;
+}
+float findSetAutocorrelationFunction(std::vector<float, std::allocator<float> > samples, int m)
+{
+    float autocorrelationFunction = 0.0;
+    for(size_t i = 0; i < samples.size() - m; i++)
+    {
+        autocorrelationFunction += (samples[i] * samples[i + m]);
+    }
+    return autocorrelationFunction;
+}
+
+int findFirstMinimumInAC(std::vector<float, std::allocator<float> > autocorrelationFunction)
+{
+    size_t locationOfMinimum = -1;
+    float maximumValue = autocorrelationFunction[0];
+    bool isMoreThanOneSampleBigger = false;
+
+    for(size_t n = 0; n < autocorrelationFunction.size() - 1; n++)
+    {
+        if(isMoreThanOneSampleBigger)
+            break;
+
+        if(autocorrelationFunction[n] > maximumValue)
+        {
+            maximumValue = autocorrelationFunction[n];
+            isMoreThanOneSampleBigger = true;
+            locationOfMinimum = n;
+        }
+    }
+    return locationOfMinimum;
 }
 
 Autocorrelation::FeatureSet
