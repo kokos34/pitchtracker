@@ -241,7 +241,7 @@ Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timest
 
     return fs;
 }
-float findSetAutocorrelationFunction(std::vector<float, std::allocator<float> > samples, int m)
+float Autocorrelation::findSetAutocorrelationFunction(std::vector<float, std::allocator<float> > samples, int m)
 {
     float autocorrelationFunction = 0.0;
     for(size_t i = 0; i < samples.size() - m; i++)
@@ -251,7 +251,7 @@ float findSetAutocorrelationFunction(std::vector<float, std::allocator<float> > 
     return autocorrelationFunction;
 }
 
-int findFirstMinimumInAC(std::vector<float, std::allocator<float> > autocorrelationFunction)
+int Autocorrelation::findFirstMinimumInAC(std::vector<float, std::allocator<float> > autocorrelationFunction)
 {
     size_t locationOfMinimum = -1;
     float maximumValue = autocorrelationFunction[0];
