@@ -57,8 +57,8 @@ protected:
     // plugin-specific data and methods go here
 	size_t m_blockSize;
     float m_inputSampleRate;
-    float findSetAutocorrelationFunction(std::vector<float> samples, int m);
-    int findFirstMinimumInAC(std::vector<float> autocorrelationFunction);
+    float findSetAutocorrelationFunction(float* samples, int m);
+    int findFirstMinimumInAC(float* autocorrelationFunction);
 
 };
 
