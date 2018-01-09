@@ -212,18 +212,16 @@ Autocorrelation::FeatureSet
 Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 {
     float block_fundFreq = 0.0f;
-//    std::allocator<float> alloc0;
-    std::vector<float> input;
+    float* input = new float[m_blockSize];
 
     // Cast to vector
     for(size_t i = 0; i < m_blockSize; i++)
-    {
-        input.push_back(inputBuffers[0][i]);
+        input[i] = inputBuffers[0][i];
 //        std::cout << "input[" << i << "]= " << input[i] << std::endl;
     }
 
     // Find AC function
-    std::vector<float> autocorrelationFunction;
+    float* autocorrelationFunction = new float[m_blockSize];
     for(size_t m = 0; m < m_blockSize; m++)
     {
         autocorrelationFunction.push_back(findSetAutocorrelationFunction(input, m));
@@ -242,10 +240,10 @@ Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timest
     fs[0].push_back(f);
     return fs;
 }
-float Autocorrelation::findSetAutocorrelationFunction(std::vector<float> samples, int m)
+float findSetAutocorrelationFunction(float* samples, int m)
 {
     float autocorrelationFunction = 0.0;
-    for(size_t i = 0; i < samples.size() - m; i++)
+    for(size_t i = 0; i < this.m_blockSize - m; i++)
     {
         autocorrelationFunction += (samples[i] * samples[i + m]);
 
@@ -253,11 +251,11 @@ float Autocorrelation::findSetAutocorrelationFunction(std::vector<float> samples
     return autocorrelationFunction;
 }
 
-int Autocorrelation::findFirstMinimumInAC(std::vector<float> autocorrelationFunction)
+int findFirstMinimumInAC(float* autocorrelationFunction)
 {
     bool isAscendingAtBeginning = false;
 
-    if(autocorrelationFunction[0] < 0 && autocorrelationFunction[1] < 0)
+    for(size_t n = 0; n < m_blockSize - 1; n++)
         isAscendingAtBeginning = true;
 
     if(isAscendingAtBeginning)
