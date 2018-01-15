@@ -14,6 +14,9 @@
 #include <memory>
 #include <iostream>
 
+#include "MaxValues.h"
+
+
 using std::string;
 
 class Autocorrelation : public Vamp::Plugin
@@ -59,7 +62,10 @@ protected:
     float m_inputSampleRate;
     float findSetAutocorrelationFunction(std::vector<float> samples, int m);
     int findFirstMinimumInAC(std::vector<float> autocorrelationFunction);
-
+    size_t findMinimumInAscending(std::vector<float> autocorrelationFunction);
+    size_t findMinimumInDescending(std::vector<float> autocorrelationFunction);
+    FeatureSet fs;
+    int counter;
 };
 
 #endif

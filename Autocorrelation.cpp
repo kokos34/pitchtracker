@@ -8,8 +8,9 @@
 
 Autocorrelation::Autocorrelation(float inputSampleRate) :
     Plugin(inputSampleRate),
-    m_blockSize(0),
-    m_inputSampleRate(44100.0)
+    m_blockSize(1024),
+    m_inputSampleRate(44100.0),
+    counter(0)
     // Also be sure to set your plugin parameters (presumably stored
     // in member variables) to their default values here -- the host
     // will not do that for you
@@ -236,12 +237,10 @@ Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timest
     f.hasTimestamp = false;
     f.values.push_back(block_fundFreq);
 
-    FeatureSet fs;
-    fs[0].push_back(f);
-
+    fs[counter++].push_back(f);
     return fs;
 }
-float Autocorrelation::findSetAutocorrelationFunction(std::vector<float, std::allocator<float> > samples, int m)
+float Autocorrelation::findSetAutocorrelationFunction(std::vector<float> samples, int m)
 {
     float autocorrelationFunction = 0.0;
     for(size_t i = 0; i < samples.size() - m; i++)
@@ -251,26 +250,89 @@ float Autocorrelation::findSetAutocorrelationFunction(std::vector<float, std::al
     return autocorrelationFunction;
 }
 
-int Autocorrelation::findFirstMinimumInAC(std::vector<float, std::allocator<float> > autocorrelationFunction)
+int Autocorrelation::findFirstMinimumInAC(std::vector<float> autocorrelationFunction)
 {
-    size_t locationOfMinimum = -1;
-    float maximumValue = autocorrelationFunction[0];
-    bool isMoreThanOneSampleBigger = false;
+    bool isAscendingAtBeginning = false;
 
-    for(size_t n = 0; n < autocorrelationFunction.size() - 1; n++)
+    if(autocorrelationFunction[0] < 0 && autocorrelationFunction[1] < 0)
+        isAscendingAtBeginning = true;
+
+    if(isAscendingAtBeginning)
+        return findMinimumInAscending(autocorrelationFunction);
+    else
+        return findMinimumInDescending(autocorrelationFunction);
+}
+
+size_t Autocorrelation::findMinimumInAscending(std::vector<float> autocorrelationFunction)
+{
+    size_t firstMax = 1;
+    size_t minimumPos = 1;
+
+    for(size_t i = 2; i < autocorrelationFunction.size() - 1; i++)
     {
-        if(isMoreThanOneSampleBigger)
-            break;
-
-        if(autocorrelationFunction[n] > maximumValue)
+        if(autocorrelationFunction[i-1] < autocorrelationFunction[i]
+                && autocorrelationFunction[i] > autocorrelationFunction[i+1])
         {
-            maximumValue = autocorrelationFunction[n];
-            isMoreThanOneSampleBigger = true;
-            locationOfMinimum = n;
+            if(autocorrelationFunction[i-2] < autocorrelationFunction[i-1]
+                    && autocorrelationFunction[i+1] > autocorrelationFunction[i+2])
+            {
+                firstMax = i;
+                break;
+            }
         }
     }
-    return locationOfMinimum;
+
+    for(size_t i = firstMax; i < autocorrelationFunction.size() - 3; i++)
+    {
+        float currValue = autocorrelationFunction[i];
+        if(currValue < autocorrelationFunction[i+1]
+                && currValue < autocorrelationFunction[i+2])
+        {
+            minimumPos = i;
+            break;
+        }
+    }
+
+    return minimumPos;
 }
+
+size_t Autocorrelation::findMinimumInDescending(std::vector<float> autocorrelationFunction)
+{
+    size_t minimumPos = 1;
+
+    for(size_t i = 0; i < autocorrelationFunction.size() - 3; i++)
+    {
+        float currValue = autocorrelationFunction[i];
+        if(currValue < autocorrelationFunction[i+1]
+                && currValue < autocorrelationFunction[i+2])
+        {
+            minimumPos = i;
+            break;
+        }
+    }
+
+    return minimumPos;
+}
+
+//size_t locationOfMinimum = -1;
+//float maximumValue = autocorrelationFunction[0];
+//bool isMoreThanOneSampleBigger = false;
+//int posCounter = 0;
+
+//for(size_t n = 0; n < autocorrelationFunction.size() - 1; n++)
+//{
+//    if(isMoreThanOneSampleBigger)
+//        break;
+
+//    if(autocorrelationFunction[n] > maximumValue)
+//    {
+//        maximumValue = autocorrelationFunction[n];
+//        isMoreThanOneSampleBigger = true;
+//        locationOfMinimum = n;
+//    }
+//}
+//return locationOfMinimum;
+
 
 Autocorrelation::FeatureSet
 Autocorrelation::getRemainingFeatures()
