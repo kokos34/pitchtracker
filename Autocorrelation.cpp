@@ -212,6 +212,7 @@ Autocorrelation::FeatureSet
 Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 {
     float block_fundFreq = 0.0f;
+<<<<<<< HEAD
     float* input = new float[m_blockSize];
 
     // Cast to vector
@@ -222,6 +223,20 @@ Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timest
 
     // Find AC function
     float* autocorrelationFunction = new float[m_blockSize];
+=======
+//    std::allocator<float> alloc0;
+    std::vector<float> input;
+
+    // Cast to vector
+    for(size_t i = 0; i < m_blockSize; i++)
+    {
+        input.push_back(inputBuffers[0][i]);
+//        std::cout << "input[" << i << "]= " << input[i] << std::endl;
+    }
+
+    // Find AC function
+    std::vector<float> autocorrelationFunction;
+>>>>>>> f43cf51... Version which compiles and runs
     for(size_t m = 0; m < m_blockSize; m++)
     {
         autocorrelationFunction.push_back(findSetAutocorrelationFunction(input, m));
@@ -237,7 +252,11 @@ Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timest
     f.hasTimestamp = false;
     f.values.push_back(block_fundFreq);
 
+<<<<<<< HEAD
     fs[0].push_back(f);
+=======
+    fs[0].push_back(f);
+>>>>>>> f43cf51... Version which compiles and runs
     return fs;
 }
 float findSetAutocorrelationFunction(float* samples, int m)
