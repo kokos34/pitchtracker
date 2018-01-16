@@ -29,11 +29,11 @@ PLUGIN_LIBRARY_NAME := myplugins
 
 # Edit this to list the .cpp or .c files in your plugin project
 #
-PLUGIN_SOURCES := Autocorrelation.cpp plugins.cpp
+PLUGIN_SOURCES := Autocorrelation.cpp plugins.cpp MaxValues.cpp
 
 # Edit this to list the .h files in your plugin project
 #
-PLUGIN_HEADERS := Autocorrelation.h
+PLUGIN_HEADERS := Autocorrelation.h MaxValues.h
 
 
 ##  Normally you should not edit anything below this line

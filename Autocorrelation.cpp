@@ -212,21 +212,23 @@ Autocorrelation::FeatureSet
 Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 {
     float block_fundFreq = 0.0f;
-    std::allocator<float> alloc0;
-    std::vector<float> input(alloc0);
-    input.resize(m_blockSize);
+//    std::allocator<float> alloc0;
+    std::vector<float> input;
 
     // Cast to vector
     for(size_t i = 0; i < m_blockSize; i++)
+    {
         input.push_back(inputBuffers[0][i]);
+//        std::cout << "input[" << i << "]= " << input[i] << std::endl;
+    }
 
     // Find AC function
-    std::allocator<float> alloc1;
-    std::vector<float> autocorrelationFunction(alloc1);
-    autocorrelationFunction.resize(m_blockSize);
+    std::vector<float> autocorrelationFunction;
     for(size_t m = 0; m < m_blockSize; m++)
+    {
         autocorrelationFunction.push_back(findSetAutocorrelationFunction(input, m));
-
+//        std::cout << "aC[" << m << "]= " << autocorrelationFunction[m] << std::endl;
+    }
     // Find it's minumum
     int minimum = findFirstMinimumInAC(autocorrelationFunction);
 
@@ -237,7 +239,7 @@ Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timest
     f.hasTimestamp = false;
     f.values.push_back(block_fundFreq);
 
-    fs[counter++].push_back(f);
+    fs[0].push_back(f);
     return fs;
 }
 float Autocorrelation::findSetAutocorrelationFunction(std::vector<float> samples, int m)
@@ -246,6 +248,7 @@ float Autocorrelation::findSetAutocorrelationFunction(std::vector<float> samples
     for(size_t i = 0; i < samples.size() - m; i++)
     {
         autocorrelationFunction += (samples[i] * samples[i + m]);
+
     }
     return autocorrelationFunction;
 }
@@ -313,26 +316,6 @@ size_t Autocorrelation::findMinimumInDescending(std::vector<float> autocorrelati
 
     return minimumPos;
 }
-
-//size_t locationOfMinimum = -1;
-//float maximumValue = autocorrelationFunction[0];
-//bool isMoreThanOneSampleBigger = false;
-//int posCounter = 0;
-
-//for(size_t n = 0; n < autocorrelationFunction.size() - 1; n++)
-//{
-//    if(isMoreThanOneSampleBigger)
-//        break;
-
-//    if(autocorrelationFunction[n] > maximumValue)
-//    {
-//        maximumValue = autocorrelationFunction[n];
-//        isMoreThanOneSampleBigger = true;
-//        locationOfMinimum = n;
-//    }
-//}
-//return locationOfMinimum;
-
 
 Autocorrelation::FeatureSet
 Autocorrelation::getRemainingFeatures()
