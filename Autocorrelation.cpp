@@ -217,23 +217,22 @@ Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timest
 
     // Cast to vector
     for(size_t i = 0; i < m_blockSize; i++)
-    {
         input.push_back(inputBuffers[0][i]);
-//        std::cout << "input[" << i << "]= " << input[i] << std::endl;
-    }
 
     // Find AC function
     std::vector<float> autocorrelationFunction;
     for(size_t m = 0; m < m_blockSize; m++)
-    {
         autocorrelationFunction.push_back(findSetAutocorrelationFunction(input, m));
-//        std::cout << "aC[" << m << "]= " << autocorrelationFunction[m] << std::endl;
-    }
+
     // Find it's minumum
     int minimum = findFirstMinimumInAC(autocorrelationFunction);
 
-    // Calculate fundamental frequency
-    block_fundFreq = 1.0 / minimum * m_inputSampleRate;
+    // If failed to find fundamental freq, just go
+    // to next frame
+    if(minimum == 0)
+        block_fundFreq = 0;
+    else
+        block_fundFreq = 1.0 / minimum * m_inputSampleRate;
 
     Feature f;
     f.hasTimestamp = false;
@@ -246,24 +245,43 @@ float Autocorrelation::findSetAutocorrelationFunction(std::vector<float> samples
 {
     float autocorrelationFunction = 0.0;
     for(size_t i = 0; i < samples.size() - m; i++)
-    {
         autocorrelationFunction += (samples[i] * samples[i + m]);
 
-    }
     return autocorrelationFunction;
 }
 
 int Autocorrelation::findFirstMinimumInAC(std::vector<float> autocorrelationFunction)
 {
-    bool isAscendingAtBeginning = false;
+    short framePeriod = 0;
+    short shift = 20;
+    int size = autocorrelationFunction.size();
 
-    if(autocorrelationFunction[0] < 0 && autocorrelationFunction[1] < 0)
-        isAscendingAtBeginning = true;
+    while(shift < size)
+    {
+        if (autocorrelationFunction[shift] > 0.55 * autocorrelationFunction[0])
+        {
+            for(int i = shift; i < size - 1; i++)
+            {
+                if(autocorrelationFunction[i] < autocorrelationFunction[i+1])
+                {
+                    framePeriod = i;
+                    break;
+                }
+            }
 
-    if(isAscendingAtBeginning)
-        return findMinimumInAscending(autocorrelationFunction);
-    else
-        return findMinimumInDescending(autocorrelationFunction);
+            for(int i = framePeriod + 1; i < size - 1; i++)
+            {
+                if(autocorrelationFunction[i] > autocorrelationFunction[i+1])
+                {
+                    framePeriod = i;
+                    break;
+                }
+            }
+            break;
+        }
+        shift++;
+    }
+    return framePeriod;
 }
 
 size_t Autocorrelation::findMinimumInAscending(std::vector<float> autocorrelationFunction)

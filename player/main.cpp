@@ -41,8 +41,8 @@ int main(int argc, char *argv[])
 {
     float* frequencies = readSamples("out.txt");
     const float sampleRate = 44100.0;
-    const float durationOfFrame = 1024.0 / sampleRate;
-    const long totalSize = size * durationOfFrame * 1024;
+
+    const long totalSize = size * 1024 / 44100.0;
     cout << totalSize << endl;
 
     double* buffer = new double[totalSize];
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
         if(i % 1024 == 0)
             f++;
 
-        double t = double(i) * (double)sampleRate;
+        double t = double(i) / (double)sampleRate;
         buffer[i] = sin(2.0 * M_PI * t * frequencies[f]);
 //        cout << "b[" << i << "]= " << buffer[i] << endl;
     }
