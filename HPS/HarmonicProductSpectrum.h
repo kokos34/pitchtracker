@@ -5,25 +5,21 @@
 
 
 // Remember to use a different guard symbol in each header!
-
 #ifndef MY_PLUGIN_H
 #define MY_PLUGIN_H
 
 #include <vamp-sdk/Plugin.h>
-#include <vector>
-#include <memory>
-#include <iostream>
-
-#include "MaxValues.h"
-
+#include <fftw3.h>
+#include <cmath>
 
 using std::string;
 
-class Autocorrelation : public Vamp::Plugin
+
+class HarmonicProductSpectrum : public Vamp::Plugin
 {
 public:
-    Autocorrelation(float inputSampleRate);
-    virtual ~Autocorrelation();
+    HarmonicProductSpectrum(float inputSampleRate);
+    virtual ~HarmonicProductSpectrum();
 
     string getIdentifier() const;
     string getName() const;
@@ -58,15 +54,14 @@ public:
 
 protected:
     // plugin-specific data and methods go here
-	size_t m_blockSize;
+    size_t m_blockSize;
     float m_inputSampleRate;
-    float findSetAutocorrelationFunction(std::vector<float> samples, int m);
-    int findFirstMinimumInAC(std::vector<float> autocorrelationFunction);
-    size_t findMinimumInAscending(std::vector<float> autocorrelationFunction);
-    size_t findMinimumInDescending(std::vector<float> autocorrelationFunction);
-//    FeatureSet fs;
-    int counter;
+
+    fftw_complex* calculateFourier(const float *const *inputBuffers);
+    double* getSpectrum(fftw_complex* fourierOfFrame);
+    double findFundamentalFrequency(double* spectrum);
 };
 
-#endif
 
+
+#endif

@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdlib>
 #include <cmath>
+#include "fftw3.h"
 
 using namespace::std;
 
@@ -17,6 +18,8 @@ float* readSamples(const char* name)
     string line;
     myfile.open(name, ifstream::in);
 
+	fftw_complex* in;
+
     if(myfile.good())
     {
         while(getline(myfile, line))
@@ -24,7 +27,7 @@ float* readSamples(const char* name)
             frequencies.push_back(atof(line.c_str()));
         }
         myfile.close();
-    }
+    }    
     else
         return NULL;
 
