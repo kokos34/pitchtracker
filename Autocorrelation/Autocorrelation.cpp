@@ -260,7 +260,7 @@ int Autocorrelation::findFirstMinimumInAC(std::vector<float> autocorrelationFunc
 
     while(shift < size)
     {
-        if (autocorrelationFunction[shift] > 0.55 * autocorrelationFunction[0])
+        if (autocorrelationFunction[shift] > 0.7 * autocorrelationFunction[0])
         {
             for(int i = shift; i < size - 1; i++)
             {

@@ -57,9 +57,11 @@ protected:
     size_t m_blockSize;
     float m_inputSampleRate;
 
-    fftw_complex* calculateFourier(const float *const *inputBuffers);
-    double* getSpectrum(fftw_complex* fourierOfFrame);
-    double findFundamentalFrequency(double* spectrum);
+    float* getSpectrum(const float *const *inputBuffers);
+    float findFundamentalFrequency(float* spectrum);
+    float* findCorrelationArray(float* spectrum);
+    size_t FindMaxInCorrelationArray(float* corArray);
+
 };
 
 
