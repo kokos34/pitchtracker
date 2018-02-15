@@ -230,7 +230,6 @@ Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timest
     // Cast to vector
     for(size_t i = 0; i < m_blockSize; i++)
     {
-        input.push_back(inputBuffers[0][i]);
 //        std::cout << "input[" << i << "]= " << input[i] << std::endl;
     }
 
