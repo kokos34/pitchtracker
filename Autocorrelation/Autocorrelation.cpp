@@ -75,7 +75,7 @@ Autocorrelation::getInputDomain() const
 size_t
 Autocorrelation::getPreferredBlockSize() const
 {
-    return 0; // 0 means "I can handle any block size"
+    return 1024; // 0 means "I can handle any block size"
 }
 
 size_t 
@@ -115,13 +115,13 @@ Autocorrelation::getParameterDescriptors() const
     // they have not changed in the mean time.
 
     ParameterDescriptor d;
-    d.identifier = "parameter";
-    d.name = "Some Parameter";
-    d.description = "";
-    d.unit = "";
+    d.identifier = "ff";
+    d.name = "Fundamental Frequency";
+    d.description = "Fundamental frequency of the frame";
+    d.unit = "Hz";
     d.minValue = 0;
-    d.maxValue = 10;
-    d.defaultValue = 5;
+    d.maxValue = 20000;
+    d.defaultValue = 0;
     d.isQuantized = false;
     list.push_back(d);
 
@@ -131,7 +131,7 @@ Autocorrelation::getParameterDescriptors() const
 float
 Autocorrelation::getParameter(string identifier) const
 {
-    if (identifier == "parameter") {
+    if (identifier == "ff") {
         return 5; // return the ACTUAL current value of your parameter here!
     }
     return 0;
@@ -227,25 +227,26 @@ Autocorrelation::process(const float *const *inputBuffers, Vamp::RealTime timest
 //    std::allocator<float> alloc0;
     std::vector<float> input;
 
+    FeatureSet fs;
+
     // Cast to vector
     for(size_t i = 0; i < m_blockSize; i++)
-    {
-//        std::cout << "input[" << i << "]= " << input[i] << std::endl;
-    }
 
     // Find AC function
     std::vector<float> autocorrelationFunction;
 >>>>>>> f43cf51... Version which compiles and runs
     for(size_t m = 0; m < m_blockSize; m++)
-    {
         autocorrelationFunction.push_back(findSetAutocorrelationFunction(input, m));
-//        std::cout << "aC[" << m << "]= " << autocorrelationFunction[m] << std::endl;
-    }
-    // Find it's minumum
+
+    // Find its minumum
     int minimum = findFirstMinimumInAC(autocorrelationFunction);
 
-    // Calculate fundamental frequency
-    block_fundFreq = 1.0 / minimum * m_inputSampleRate;
+    // If failed to find fundamental freq, just go
+    // to next frame
+    if(minimum == 0)
+        block_fundFreq = 0;
+    else
+        block_fundFreq = 1.0 / minimum * m_inputSampleRate;
 
     Feature f;
     f.hasTimestamp = false;
@@ -262,24 +263,43 @@ float findSetAutocorrelationFunction(float* samples, int m)
 {
     float autocorrelationFunction = 0.0;
     for(size_t i = 0; i < this.m_blockSize - m; i++)
-    {
         autocorrelationFunction += (samples[i] * samples[i + m]);
 
-    }
     return autocorrelationFunction;
 }
 
 int findFirstMinimumInAC(float* autocorrelationFunction)
 {
-    bool isAscendingAtBeginning = false;
+    short framePeriod = 0;
+    short shift = 20;
+    int size = autocorrelationFunction.size();
 
-    for(size_t n = 0; n < m_blockSize - 1; n++)
-        isAscendingAtBeginning = true;
+    while(shift < size)
+    {
+        if (autocorrelationFunction[shift] > 0.85 * autocorrelationFunction[0])
+        {
+            for(int i = shift; i < size - 1; i++)
+            {
+                if(autocorrelationFunction[i] < autocorrelationFunction[i+1])
+                {
+                    framePeriod = i;
+                    break;
+                }
+            }
 
-    if(isAscendingAtBeginning)
-        return findMinimumInAscending(autocorrelationFunction);
-    else
-        return findMinimumInDescending(autocorrelationFunction);
+            for(int i = framePeriod + 1; i < size - 1; i++)
+            {
+                if(autocorrelationFunction[i] > autocorrelationFunction[i+1])
+                {
+                    framePeriod = i;
+                    break;
+                }
+            }
+            break;
+        }
+        shift++;
+    }
+    return framePeriod;
 }
 
 size_t Autocorrelation::findMinimumInAscending(std::vector<float> autocorrelationFunction)

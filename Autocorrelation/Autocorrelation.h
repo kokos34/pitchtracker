@@ -64,7 +64,7 @@ protected:
     int findFirstMinimumInAC(float* autocorrelationFunction);
     size_t findMinimumInAscending(std::vector<float> autocorrelationFunction);
     size_t findMinimumInDescending(std::vector<float> autocorrelationFunction);
-    FeatureSet fs;
+//    FeatureSet fs;
     int counter;
 };
 
