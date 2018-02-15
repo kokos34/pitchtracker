@@ -10,7 +10,7 @@ using namespace::std;
 
 HarmonicProductSpectrum::HarmonicProductSpectrum(float inputSampleRate) :
     Plugin(inputSampleRate),
-    m_blockSize(1024),
+    m_blockSize(2048),
     m_inputSampleRate(44100.0)
     // Also be sure to set your plugin parameters (presumably stored
     // in member variables) to their default values here -- the host
@@ -76,7 +76,7 @@ HarmonicProductSpectrum::getInputDomain() const
 size_t
 HarmonicProductSpectrum::getPreferredBlockSize() const
 {
-    return 1024; // 0 means "I can handle any block size"
+    return 2048; // 0 means "I can handle any block size"
 }
 
 size_t
@@ -249,29 +249,63 @@ float HarmonicProductSpectrum::findFundamentalFrequency(float* spectrum)
 
 float* HarmonicProductSpectrum::findCorrelationArray(float* spectrum)
 {
-    const short multiplier = 5;
-    float* result = new float[m_blockSize / 2];
+    //const int multiplier = 3;
+    const short order = 15;
+    int spectrumLen = m_blockSize / 2;
+    int HPSLen = spectrumLen / (order+1);
+//    cout <<" len "<< HPSLen << endl;
+    float* hps = new float[spectrumLen];
 
-    for(size_t i = 0; i < m_blockSize/2; i++)
-        result[i] = 1.0000000000000;
-
-    for(size_t w = 1; w < m_blockSize/2; w++)
+    for (int i = 0; i < spectrumLen; i++)
     {
-        for(size_t r = 1; r < multiplier;  r++)
-        {
-            if(w*r < m_blockSize/2)
-                result[w] *= fabs(spectrum[w * r]);
-        }     result[w] = initialPeak;
+        if(i < HPSLen)
+            hps[i] = spectrum[i];
+        else
+            hps[i] = -100000000000;
     }
-    return result;
+
+    // do every harmonic in a big loop:
+    for (int harmonic = 1; harmonic <= order; harmonic++)
+    {
+        int downsamplingFactor = harmonic + 1;
+        for (int index = 0; index < HPSLen; index++)
+        {
+            // Calculate the average (downsampling):
+            float avg = 0;
+            for (int i = 0; i < downsamplingFactor; i++)
+                avg += spectrum[index * downsamplingFactor + i];
+
+            hps[index] += avg / downsamplingFactor;
+        }
+    }
+    return hps;
+
+//    float* result = new float[m_blockSize / 2];
+
+//    for(size_t i = 0; i < m_blockSize/2; i++)
+//        result[i] = 1.0000000000000;
+
+//    for(size_t w = 1; w < m_blockSize/2; w++)
+//    {
+//        float avg = 0;
+//        for(size_t r = 1; r < multiplier;  r++)
+//        {
+//            if(w*r < m_blockSize/2)
+//                result[w] *= fabs(spectrum[w * r]);
+//        }
+//        //result[w] = initialPeak;
+
+//    }
+//    return result;
 }
 
 size_t HarmonicProductSpectrum::FindMaxInCorrelationArray(float* corArray)
 {
     float max = 0.0;
     size_t period = 0;
+    int HPSLen = (m_blockSize/2) / 16;
 
-    for(size_t i = 1; i < m_blockSize/2; i++)
+    for(size_t i = 1; i < HPSLen; i++)
     {
         if(corArray[i] > max)
         {
@@ -282,11 +316,11 @@ size_t HarmonicProductSpectrum::FindMaxInCorrelationArray(float* corArray)
 
     corArray[period] = 0.0;
 
-    //REMOVING OCTAVE ERRORS
+//    //REMOVING OCTAVE ERRORS
     float secondMax = 0.0;
     size_t secondPeriod = 0;
 
-    for(size_t i = 0; i < m_blockSize/2; i++)
+    for(size_t i = 0; i < HPSLen; i++)
     {
         if(corArray[i] > secondMax)
         {
@@ -295,7 +329,7 @@ size_t HarmonicProductSpectrum::FindMaxInCorrelationArray(float* corArray)
         }
     }
     float diff = (2*secondMax - max);
-    if(diff < 0 && secondMax / max > 0.7)
+    if(diff < 0 && secondMax / max > 0.05)
     {
         cout << "in " << max << " " << secondMax << " diff = " << diff << endl;
         period = secondPeriod;
